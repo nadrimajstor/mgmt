@@ -1,0 +1,51 @@
+# Docs: https://help.github.com/en/articles/workflow-syntax-for-github-actions
+
+# If the name is omitted, it uses the filename instead.
+#name: Test
+on:
+  # Run on all pushes.
+  push:
+  # Run on all pull requests.
+  pull_request:
+    branches:
+    - master
+  # Run daily at 2am.
+  schedule:
+  - cron: 0 2 * * *
+
+
+jobs:
+  job1:
+    name: Test (${{ matrix.test_block }}) on ${{ matrix.os }} with golang ${{ matrix.golang_version }}
+    strategy:
+      matrix:
+        # TODO: Add tip when it's supported: https://github.com/actions/setup-go/issues/21
+        os: [ubuntu-latest] # add macOS-latest
+        golang_version: ["1.11.x"] # add "1.12.x" and tip
+        test_block: ["basic", "shell", "race"]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Setup golang ${{ matrix.golang_version }}
+      uses: actions/setup-go@v1
+      with:
+        go-version: ${{ matrix.golang_version }}
+
+    - name: Checkout the code into the golang module directory
+      uses: actions/checkout@v1
+      with:
+        submodules: true
+
+    - name: Get dependencies
+      run: |
+        make deps
+
+    - name: Run test block
+      #env:
+      #  TEST_BLOCK: ${{ matrix.test_block }}
+      # TODO: workaround: https://github.com/actions/setup-go/issues/14
+      run: |
+        export PATH=$PATH:$(go env GOPATH)/bin
+        #make test
+        TEST_BLOCK="${{ matrix.test_block }}" make test # this works too!
