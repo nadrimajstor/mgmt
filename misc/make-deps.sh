@@ -131,7 +131,7 @@ go get github.com/tmthrgd/go-bindata/go-bindata	# for compiling in non golang fi
 if env | grep -q -e '^TRAVIS=true$' -e '^JENKINS_URL=' -e '^BUILD_TAG=jenkins'; then
 	go get -u gopkg.in/alecthomas/gometalinter.v1 && mv "$(dirname $(command -v gometalinter.v1))/gometalinter.v1" "$(dirname $(command -v gometalinter.v1))/gometalinter" && gometalinter --install	# bonus
 fi
-command -v mdl &>/dev/null || gem install mdl --no-document || gem install mdl --no-document --user-install || true	# for linting markdown files
-command -v fpm &>/dev/null || gem install fpm --no-document || gem install fpm --no-document --user-install || true	# for cross distro packaging
+command -v mdl &>/dev/null || gem install mdl --no-document || sudo gem install mdl --no-document || true	# for linting markdown files
+command -v fpm &>/dev/null || gem install fpm --no-document || sudo gem install fpm --no-document || true	# for cross distro packaging
 cd "$XPWD" >/dev/null
 echo "$0 finished!"
