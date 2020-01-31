@@ -30,6 +30,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/kylelemons/godebug/pretty"
+	"github.com/sanity-io/litter"
 )
 
 func TestInterpolate0(t *testing.T) {
@@ -127,6 +128,66 @@ func TestInterpolate0(t *testing.T) {
 			ast:  ast,
 		})
 	}
+	{
+		ast := &StmtProg{
+			Prog: []interfaces.Stmt{
+				&StmtRes{
+					Kind: "test",
+					Name: &ExprStr{
+						V: "t1",
+					},
+					Contents: []StmtResContents{
+						&StmtResField{
+							Field: "stringptr",
+							Value: &ExprStr{
+								V: "${hello}",
+							},
+						},
+					},
+				},
+			},
+		}
+		testCases = append(testCases, test{
+			name: "variable escaping 1",
+			code: `
+			test "t1" {
+				stringptr => "\${hello}",
+			}
+			`,
+			fail: false,
+			ast:  ast,
+		})
+	}
+	{
+		ast := &StmtProg{
+			Prog: []interfaces.Stmt{
+				&StmtRes{
+					Kind: "test",
+					Name: &ExprStr{
+						V: "t1",
+					},
+					Contents: []StmtResContents{
+						&StmtResField{
+							Field: "stringptr",
+							Value: &ExprStr{
+								V: `\` + `$` + `{hello}`,
+							},
+						},
+					},
+				},
+			},
+		}
+		testCases = append(testCases, test{
+			name: "variable escaping 2",
+			code: `
+			test "t1" {
+				stringptr => "` + `\\` + `\$` + "{hello}" + `",
+			}
+			`,
+			fail: false,
+			ast:  ast,
+		})
+	}
 
 	names := []string{}
 	for index, tc := range testCases { // run all the tests
@@ -189,14 +250,28 @@ func TestInterpolate0(t *testing.T) {
 				return
 			}
 			// double check because DeepEqual is different since the logf exists
+			lo := &litter.Options{
+				//Compact: false,
+				StripPackageNames: true,
+				HidePrivateFields: true,
+				HideZeroValues: true,
+				//FieldExclusions: regexp.MustCompile(`^(data)$`),
+				//FieldFilter       func(reflect.StructField, reflect.Value) bool
+				//HomePackage       string
+				//Separator         string
+			}
+			if lo.Sdump(iast) == lo.Sdump(exp) { // simple diff
+				return
+			}
+
 			diff := pretty.Compare(iast, exp)
 			if diff == "" { // bonus
 				return
 			}
 			t.Errorf("test #%d: AST did not match expected", index)
 			// TODO: consider making our own recursive print function
-			t.Logf("test #%d:   actual: \n%s", index, spew.Sdump(iast))
-			t.Logf("test #%d: expected: \n%s", index, spew.Sdump(exp))
+			t.Logf("test #%d:   actual: \n%s", index, lo.Sdump(iast))
+			t.Logf("test #%d: expected: \n%s", index, lo.Sdump(exp))
 			t.Logf("test #%d: diff:\n%s", index, diff)
 		})
 	}

@@ -8401,7 +8401,10 @@ func (obj *ExprVar) Apply(fn func(interfaces.Node) error) error { return fn(obj)
 
 // Init initializes this branch of the AST, and returns an error if it fails to
 // validate.
-func (obj *ExprVar) Init(*interfaces.Data) error { return nil }
+func (obj *ExprVar) Init(*interfaces.Data) error {
+	// XXX: Validate obj.Name here!
+	return nil
+}
 
 // Interpolate returns a new node (aka a copy) once it has been expanded. This
 // generally increases the size of the AST when it is used. It calls Interpolate

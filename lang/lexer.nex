@@ -242,7 +242,8 @@
 			yylex.pos(lval) // our pos
 			s := yylex.Text()
 
-			x, err := strconv.Unquote(s) // expects quote wrapping!
+			// our modified version of strconv.Unquote that allows $
+			x, err := Unquote(s) // expects quote wrapping!
 			if err == nil {
 				lval.str = x // it comes out all cleanly escaped
 			} else if err == strconv.ErrSyntax {
